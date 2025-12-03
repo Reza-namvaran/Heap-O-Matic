@@ -1,14 +1,21 @@
 #ifndef ALLOCATOR_H
 #define ALLOCATOR_H
-#include <stdlib.h>
 
-typedef struct block {
-    size_t size;
-    int free;
-    struct block *next;
-} block_t;
+#include <stddef.h>
+#include <stdint.h>
+#include <pthread.h>
 
-void* mem_alloc(size_t size);
-void mem_free(void *ptr);
+typedef struct chunk_t {
+    uint32_t size;
+    uint8_t inuse;
+    struct chunk_t *next;
+};
+
+typedef struct heap_t {
+    struct chunk_t *start;
+    size_t total;
+    uint32_t avail;
+    pthread_mutex_t lock;    
+};
 
 #endif
