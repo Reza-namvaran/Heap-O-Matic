@@ -13,7 +13,7 @@
 #define TEST_RUN(test_func) do { \
     printf("Running %s ... ", #test_func); \
     int res = test_func(); \
-    if (res == 0) printf("PASS\n") \
-}
+    if (res == 0) printf("PASS\n"); \
+} while (0)
 
 #endif
