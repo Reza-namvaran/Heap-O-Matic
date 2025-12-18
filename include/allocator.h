@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#include "config.h"
+
 typedef struct chunk_t {
     uint32_t size;
     uint8_t inuse;
@@ -25,7 +27,7 @@ void hfree(void *ptr);
 // Helpers exposed for tests and debug
 extern heap_t GLOBAL_HEAP;
 
-static inline void align_up(size_t size, size_t align);
+static inline size_t align_up(size_t size, size_t align);
 static inline void *chunk_to_payload(chunk_t *c);
 static inline chunk_t *payload_to_chunk(void *p);
 
