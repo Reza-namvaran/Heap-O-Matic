@@ -1,0 +1,43 @@
+#include <sys/mman.h>
+#include <errno.h>
+#include "allocator.h"
+
+heap_t GLOBAL_HEAP;
+
+void hinit() {
+    void *heap_base = mmap(NULL, HEAP_DEFAULT_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE, -1, 0);
+
+    if (heap_base == MAP_FAILED) {
+        errno = ENOMEM;
+        return;
+    }
+
+    // Defensive Programming: Align to start
+    size_t pad = align_offset(heap_base);
+    chunk_t *aligned_start = (chunk_t *)((char *)heap_base + pad);
+
+    // If padded, make a dummy in-use chunk for the padding space
+    if (pad > 0) {
+        chunk_t *dummy = (chunk_t *) heap_base;
+        dummy->size = pad;
+        dummy->inuse = 1;
+        dummy->next = aligned_start;
+    }
+
+    // Init first free chunk (rest of heap)
+    aligned_start->size = HEAP_DEFAULT_SIZE - pad - sizeof(chunk_t);
+    aligned_start->inuse = 0;
+    aligned_start->next = NULL;
+
+    // Set global heap
+    GLOBAL_HEAP.start = (pad > 0) ? (chunk_t *)heap_base : aligned_start;
+    GLOBAL_HEAP.total = HEAP_DEFAULT_SIZE;
+    GLOBAL_HEAP.avail = aligned_start->size;
+    pthread_mutex_init(&GLOBAL_HEAP.lock, NULL); // Thread Safe
+
+    #if ENABLE_POISONING
+        // Fill free payload with poison pattern (0xDEADBEEF)
+        void *payload = chunk_to_payload(aligned_start);
+        memset(payload, 0xDB, aligned_start->size);
+    #endif
+}
