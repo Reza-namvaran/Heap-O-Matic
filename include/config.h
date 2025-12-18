@@ -12,6 +12,4 @@
 
 #define is_aligned(A) (((size_t)((A)) & (CHUNK_ALIGN_MASK)) == 0)
 
-#define align_offset(A) \
-  ((((size_t)(A) & CHUNK_ALIGN_MASK) == 0) ? 0 : \
-   ((HEAP_ALIGNMENT - ((size_t)(A) & CHUNK_ALIGN_MASK)) & CHUNK_ALIGN_MASK))
+#define align_offset(A) ((((size_t)(A) & CHUNK_ALIGN_MASK) == 0) ? 0 : ((HEAP_ALIGNMENT - ((size_t)(A) & CHUNK_ALIGN_MASK)) & CHUNK_ALIGN_MASK))
