@@ -1,0 +1,8 @@
+#pragma once
+
+#define HEAP_DEFAULT_SIZE (8 * 1024 * 1024)
+#define HEAP_ALIGNMENT 16
+
+#define ENABLE_POISONING 1
+#define ENABLE_SPRAY_DETECT 1
+#define ENABLE_GC 1
