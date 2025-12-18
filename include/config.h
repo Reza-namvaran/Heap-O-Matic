@@ -4,6 +4,7 @@
 #define HEAP_ALIGNMENT 16
 
 #define ENABLE_POISONING 0
+#define ENABLE_DEBUG 1
 #define ENABLE_SPRAY_DETECT 1
 #define ENABLE_GC 1
 
