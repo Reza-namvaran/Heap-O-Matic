@@ -7,8 +7,16 @@
 
 #include "config.h"
 
+/// TODO: remove if no padding considration
+typedef enum {
+    CHUNK_FREE,
+    CHUNK_USED,
+    CHUNK_GAURD
+} chunk_kind_t;
+
 typedef struct chunk_t {
     uint32_t size;
+    // chunk_kind_t kind;
     uint8_t inuse;
     struct chunk_t *next;
 } chunk_t;
