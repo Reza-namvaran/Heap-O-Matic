@@ -1,11 +1,13 @@
 #include <sys/mman.h>
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
 #include "allocator.h"
 
 heap_t GLOBAL_HEAP;
 
 void hinit() {
-    void *heap_base = mmap(NULL, HEAP_DEFAULT_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE, -1, 0);
+    void *heap_base = mmap(NULL, HEAP_DEFAULT_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
     if (heap_base == MAP_FAILED) {
         errno = ENOMEM;
@@ -14,6 +16,14 @@ void hinit() {
 
     // Defensive Programming: Align to start
     size_t pad = align_offset(heap_base);
+
+    /// TODO: Decide on final design
+    // for now we assume mmap is always aligned
+    if (pad != 0) {
+        printf("pad is not 0: %i", pad);
+        pad = 0;
+    }
+    
     chunk_t *aligned_start = (chunk_t *)((char *)heap_base + pad);
 
     // If padded, make a dummy in-use chunk for the padding space
