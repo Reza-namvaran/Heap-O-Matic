@@ -32,10 +32,12 @@ void *halloc(size_t size) {
 
                 curr->next = rem;
                 curr->size = payload;
+
+                GLOBAL_HEAP.avail -= sizeof(chunk_t);
             }
 
             curr->inuse = 1;
-            GLOBAL_HEAP.avail -= (curr->size + sizeof(chunk_t));
+            GLOBAL_HEAP.avail -= curr->size;
 
             #ifdef ENABLE_DEBUG
                 if (heap_check() != 0) {
