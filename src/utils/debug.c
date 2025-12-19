@@ -25,18 +25,9 @@ int heap_check(void) {
     }
 
     if (free_sum != GLOBAL_HEAP.avail) {
-        size_t diff = (free_sum > GLOBAL_HEAP.avail) ? free_sum - GLOBAL_HEAP.avail : GLOBAL_HEAP.avail - free_sum;
-        if (diff > sizeof(chunk_t)) {   // only abort if difference is larger than one header
             printf("free sum mismatch: %zu, avail: %u\n", free_sum, GLOBAL_HEAP.avail);
             return -3;
-        } else {
-            // minor bookkeeping difference; safe to ignore
-            printf("minor free sum mismatch tolerated: %zu vs %u\n", free_sum, GLOBAL_HEAP.avail);
-        }
     }
-
-
-
 
     return 0;
 }
@@ -55,7 +46,7 @@ void heap_dump() {
         printf("[%02d] chunk=%p payload=%p end=%p | size=%u | %s\n", i++, start, payload, end, curr->size, curr->inuse ? "USED" : "FREE");
 
         if (curr->next) {
-            void *expected = (char *)payload + curr->size;
+            void *expected = (char *)curr + curr->size + sizeof(chunk_t);
             if (expected != (void *)curr->next) {
                 printf("WARNING! Gap or Overlap detected\n");
             }
