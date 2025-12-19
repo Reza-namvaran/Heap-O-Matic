@@ -1,4 +1,6 @@
 #include "allocator.h"
+#include "debug.h"
+
 #include <string.h>
 #include <errno.h>
 
@@ -6,6 +8,13 @@ void *halloc(size_t size) {
     if (size == 0) return NULL;
 
     pthread_mutex_lock(&GLOBAL_HEAP.lock);
+
+    #ifdef ENABLE_DEBUG
+        if (heap_check() != 0) {
+            heap_dump();
+            abort();
+        }
+    #endif
 
     size_t payload = align_up(size, HEAP_ALIGNMENT);
     size_t total = payload + sizeof(chunk_t);
@@ -26,7 +35,14 @@ void *halloc(size_t size) {
             }
 
             curr->inuse = 1;
-            GLOBAL_HEAP.avail -= curr->size;
+            GLOBAL_HEAP.avail -= (curr->size + sizeof(chunk_t));
+
+            #ifdef ENABLE_DEBUG
+                if (heap_check() != 0) {
+                    heap_dump();
+                    abort();
+                }
+            #endif
 
             #if ENABLE_POISONING
                 memset(chunk_to_payload(curr), 0xAA, curr->size);
@@ -38,6 +54,13 @@ void *halloc(size_t size) {
 
         curr = curr->next;
     }
+
+    #ifdef ENABLE_DEBUG
+        if (heap_check() != 0) {
+            heap_dump();
+            abort();
+        }
+    #endif
 
     pthread_mutex_unlock(&GLOBAL_HEAP.lock);
     errno = ENOMEM;
