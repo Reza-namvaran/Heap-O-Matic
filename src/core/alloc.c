@@ -1,5 +1,6 @@
 #include "allocator.h"
 #include "debug.h"
+#include "split.h"
 
 #include <string.h>
 #include <errno.h>
@@ -24,17 +25,7 @@ void *halloc(size_t size) {
     while (curr) {
         if (!curr->inuse && curr->size >= payload) {
             // Split if enough space remains
-            if (curr->size >= payload + sizeof(chunk_t) + HEAP_ALIGNMENT) {
-                chunk_t *rem = (chunk_t *)((char *)curr + sizeof(chunk_t) + payload);
-                rem->size    = curr->size - payload - sizeof(chunk_t);
-                rem->inuse   = 0;
-                rem->next    = curr->next;
-
-                curr->next = rem;
-                curr->size = payload;
-
-                GLOBAL_HEAP.avail -= sizeof(chunk_t);
-            }
+            curr = chunk_split(curr, payload);
 
             curr->inuse = 1;
             GLOBAL_HEAP.avail -= curr->size;
