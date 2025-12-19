@@ -41,6 +41,8 @@ void hfree(void *ptr) {
     if (c->next && !c->next->inuse) {
         c->size += sizeof(chunk_t) + c->next->size;
         c->next = c->next->next;
+
+        GLOBAL_HEAP.avail += sizeof(chunk_t);
     }
 
     curr = GLOBAL_HEAP.start;
