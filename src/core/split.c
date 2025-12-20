@@ -8,12 +8,18 @@ chunk_t *chunk_split(chunk_t *chunk, size_t payload) {
 
     chunk_t *rem = (chunk_t *)((char *)chunk + sizeof(chunk_t) + payload);
 
+    rem->prev_size = payload;
     rem->size  = chunk->size - sizeof(chunk_t) - payload;
     rem->inuse = 0;
     rem->next  = chunk->next;
 
+
     chunk->size = payload;
     chunk->next = rem;
+
+    if (rem->next) {
+        rem->next->prev_size = rem->size;
+    }
 
     GLOBAL_HEAP.avail -= sizeof(chunk_t);
     return chunk;
