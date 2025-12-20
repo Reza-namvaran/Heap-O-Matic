@@ -17,7 +17,16 @@ void *halloc(size_t size) {
         }
     #endif
 
+    size_t pad = 0;
     size_t payload = align_up(size, HEAP_ALIGNMENT);
+    #if ENABLE_SPRAY_DETECT
+    if (size > 32) {
+        pad = GLOBAL_HEAP.cookie & 0xF;
+        if (pad == 0) pad = 8;
+        payload += pad;
+    }
+    #endif
+
     size_t total = payload + sizeof(chunk_t);
 
     chunk_t *curr = GLOBAL_HEAP.start;
@@ -42,7 +51,11 @@ void *halloc(size_t size) {
             #endif
 
             pthread_mutex_unlock(&GLOBAL_HEAP.lock);
-            return chunk_to_payload(curr);
+            #if ENABLE_SPRAY_DETECT
+                return (char *)chunk_to_payload(curr) + pad;
+            #else
+                return chunk_to_payload(curr);
+            #endif
         }
 
         curr = curr->next;
