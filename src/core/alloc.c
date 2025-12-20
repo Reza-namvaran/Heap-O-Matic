@@ -17,13 +17,12 @@ void *halloc(size_t size) {
         }
     #endif
 
-    size_t pad = 0;
     size_t payload = align_up(size, HEAP_ALIGNMENT);
+
     #if ENABLE_SPRAY_DETECT
     if (size > 32) {
-        pad = GLOBAL_HEAP.cookie & 0xF;
-        if (pad == 0) pad = 8;
-        payload += pad;
+        size_t extra_pad = 16 + (rand() & 0x3F);
+        payload = align_up(payload + extra_pad, HEAP_ALIGNMENT);
     }
     #endif
 
@@ -33,11 +32,11 @@ void *halloc(size_t size) {
 
     while (curr) {
         if (!curr->inuse && curr->size >= payload) {
-            // Split if enough space remains
             curr = chunk_split(curr, payload);
 
-            curr->inuse = 1;
             GLOBAL_HEAP.avail -= curr->size;
+
+            curr->inuse = 1;
 
             #ifdef ENABLE_DEBUG
                 if (heap_check() != 0) {
@@ -51,11 +50,7 @@ void *halloc(size_t size) {
             #endif
 
             pthread_mutex_unlock(&GLOBAL_HEAP.lock);
-            #if ENABLE_SPRAY_DETECT
-                return (char *)chunk_to_payload(curr) + pad;
-            #else
-                return chunk_to_payload(curr);
-            #endif
+            return chunk_to_payload(curr);
         }
 
         curr = curr->next;
