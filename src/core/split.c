@@ -12,10 +12,14 @@ chunk_t *chunk_split(chunk_t *chunk, size_t payload) {
     rem->size  = chunk->size - sizeof(chunk_t) - payload;
     rem->inuse = 0;
     rem->next  = chunk->next;
+    rem->magic = CHUNK_MAGIC;
+    rem->tail_magic = CHUNK_MAGIC;
 
 
-    chunk->size = payload;
-    chunk->next = rem;
+    chunk->size  = payload;
+    chunk->next  = rem;
+    chunk->magic = CHUNK_MAGIC;
+    chunk->tail_magic = CHUNK_MAGIC;
 
     if (rem->next) {
         rem->next->prev_size = rem->size;

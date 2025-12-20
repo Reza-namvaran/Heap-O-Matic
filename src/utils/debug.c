@@ -21,6 +21,11 @@ int heap_check(void) {
             free_sum += curr->size;
         }
 
+        if (curr->magic != CHUNK_MAGIC || curr->tail_magic != CHUNK_MAGIC) {
+            printf("Heap metadata corruption detected.");
+            return -4;
+        }
+
         curr = curr->next;
     }
 

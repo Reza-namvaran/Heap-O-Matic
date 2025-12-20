@@ -16,12 +16,14 @@ typedef enum {
 } chunk_kind_t;
 
 typedef struct chunk_t {
+    uint32_t magic;
     uint32_t size;
     uint32_t prev_size;
     // chunk_kind_t kind;
     uint8_t inuse;
     uint8_t _pad[7];
     struct chunk_t *next;
+    uint32_t tail_magic;
     uint8_t _pad2[8];
 } chunk_t;
 

@@ -27,6 +27,10 @@ int validate_ptr(void *ptr, chunk_t **out) {
         return invalid_ptr();
     }
 
+    if (c->magic != CHUNK_MAGIC || c->tail_magic != CHUNK_MAGIC) {
+        return invalid_ptr();
+    }
+
     *out = c;
     return 1;
 }

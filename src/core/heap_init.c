@@ -35,6 +35,8 @@ void hinit() {
     }
 
     // Init first free chunk (rest of heap)
+    aligned_start->magic = CHUNK_MAGIC;
+    aligned_start->tail_magic = CHUNK_MAGIC;
     aligned_start->prev_size = 0;
     aligned_start->size  = HEAP_DEFAULT_SIZE - pad - sizeof(chunk_t);
     aligned_start->inuse = 0;
