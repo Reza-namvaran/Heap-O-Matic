@@ -35,14 +35,16 @@ void hinit() {
     }
 
     // Init first free chunk (rest of heap)
-    aligned_start->size = HEAP_DEFAULT_SIZE - pad - sizeof(chunk_t);
+    aligned_start->size  = HEAP_DEFAULT_SIZE - pad - sizeof(chunk_t);
     aligned_start->inuse = 0;
-    aligned_start->next = NULL;
+    aligned_start->next  = NULL;
 
     // Set global heap
-    GLOBAL_HEAP.start = (pad > 0) ? (chunk_t *)heap_base : aligned_start;
-    GLOBAL_HEAP.total = HEAP_DEFAULT_SIZE;
-    GLOBAL_HEAP.avail = aligned_start->size;
+    GLOBAL_HEAP.start   = (pad > 0) ? (chunk_t *)heap_base : aligned_start;
+    GLOBAL_HEAP.heap_lo = heap_base;
+    GLOBAL_HEAP.heap_hi = (char *)heap_base + HEAP_DEFAULT_SIZE;
+    GLOBAL_HEAP.total   = HEAP_DEFAULT_SIZE;
+    GLOBAL_HEAP.avail   = aligned_start->size;
     pthread_mutex_init(&GLOBAL_HEAP.lock, NULL); // Thread Safe
 
     #if ENABLE_POISONING
