@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <stdlib.h>
 
 #include "config.h"
 
@@ -23,6 +24,8 @@ typedef struct chunk_t {
 
 typedef struct heap_t {
     struct chunk_t *start;  
+    void *heap_lo;
+    void *heap_hi;
     size_t total;
     uint32_t avail;
     pthread_mutex_t lock;    
@@ -39,7 +42,8 @@ static inline size_t align_up(size_t size, size_t align) {
     return (size + align - 1) & ~(align - 1);
 }
 
-static inline void *chunk_to_payload(chunk_t *c) {
+static inline __attribute__((always_inline)) 
+void *chunk_to_payload(chunk_t *c) {
     return (void *)(c + 1);
 }
 
