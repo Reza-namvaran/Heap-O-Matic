@@ -17,6 +17,7 @@ typedef enum {
 
 typedef struct chunk_t {
     uint32_t size;
+    uint32_t prev_size;
     // chunk_kind_t kind;
     uint8_t inuse;
     struct chunk_t *next;
@@ -49,5 +50,20 @@ void *chunk_to_payload(chunk_t *c) {
 
 static inline chunk_t *payload_to_chunk(void *p) {
     return ((chunk_t *)p) - 1;
+}
+
+static inline __attribute__((always_inline))
+chunk_t *next_chunk(chunk_t *c) {
+    chunk_t *next = (chunk_t *)((char *)c + sizeof(chunk_t) + c->size);
+    return ((void *) next < GLOBAL_HEAP.heap_hi) ? next : NULL;
+}
+
+static inline __attribute__((always_inline))
+chunk_t *prev_chunk(chunk_t *c) {
+    if (c->prev_size == 0) {
+        return NULL;
+    }
+
+    return (chunk_t *)((char *)c - sizeof(chunk_t) - c->prev_size);
 }
 #endif
