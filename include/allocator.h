@@ -28,6 +28,7 @@ typedef struct chunk_t {
 } chunk_t;
 
 typedef struct heap_t {
+    uint32_t cookie;
     struct chunk_t *start;  
     void *heap_lo;
     void *heap_hi;

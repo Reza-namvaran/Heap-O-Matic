@@ -27,7 +27,7 @@ int validate_ptr(void *ptr, chunk_t **out) {
         return invalid_ptr();
     }
 
-    if (c->magic != CHUNK_MAGIC || c->tail_magic != CHUNK_MAGIC) {
+    if (c->magic != (CHUNK_MAGIC ^ GLOBAL_HEAP.cookie) || c->tail_magic != (CHUNK_MAGIC ^ GLOBAL_HEAP.cookie)) {
         return invalid_ptr();
     }
 

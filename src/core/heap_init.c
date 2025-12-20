@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "allocator.h"
 
 heap_t GLOBAL_HEAP;
@@ -34,9 +35,12 @@ void hinit() {
         dummy->next = aligned_start;
     }
 
+    srand(time(NULL));
+    GLOBAL_HEAP.cookie  = (uint32_t)rand();
+
     // Init first free chunk (rest of heap)
-    aligned_start->magic = CHUNK_MAGIC;
-    aligned_start->tail_magic = CHUNK_MAGIC;
+    aligned_start->magic = CHUNK_MAGIC ^ GLOBAL_HEAP.cookie;
+    aligned_start->tail_magic = CHUNK_MAGIC ^ GLOBAL_HEAP.cookie;
     aligned_start->prev_size = 0;
     aligned_start->size  = HEAP_DEFAULT_SIZE - pad - sizeof(chunk_t);
     aligned_start->inuse = 0;
