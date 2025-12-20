@@ -11,7 +11,7 @@ void hfree(void *ptr) {
     pthread_mutex_lock(&GLOBAL_HEAP.lock);
 
     chunk_t *c = NULL;
-    if (!valiate_ptr(ptr, &c)) {
+    if (!validate_ptr(ptr, &c)) {
         pthread_mutex_unlock(&GLOBAL_HEAP.lock);
         return;
     }
