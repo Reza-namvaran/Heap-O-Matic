@@ -20,7 +20,9 @@ typedef struct chunk_t {
     uint32_t prev_size;
     // chunk_kind_t kind;
     uint8_t inuse;
+    uint8_t _pad[7];
     struct chunk_t *next;
+    uint8_t _pad2[8];
 } chunk_t;
 
 typedef struct heap_t {
@@ -68,4 +70,6 @@ chunk_t *prev_chunk(chunk_t *c) {
 
     return (chunk_t *)((char *)c - sizeof(chunk_t) - c->prev_size);
 }
+
+_Static_assert(sizeof(chunk_t) % HEAP_ALIGNMENT == 0, "chunk_t must be HEAP_ALIGNMENT aligned.");
 #endif
