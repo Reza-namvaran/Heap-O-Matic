@@ -8,4 +8,4 @@ int invalid_ptr(void) {
     return 0;
 }
 
-int valiate_ptr(void *ptr, chunk_t **out);
+int validate_ptr(void *ptr, chunk_t **out);

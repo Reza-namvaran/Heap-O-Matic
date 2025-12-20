@@ -1,6 +1,6 @@
 #include "validate.h"
 
-int valiate_ptr(void *ptr, chunk_t **out) {
+int validate_ptr(void *ptr, chunk_t **out) {
     if (!ptr) {
         return invalid_ptr();
     }
