@@ -14,7 +14,7 @@ void coalesce(chunk_t *c) {
     }
 
     chunk_t *prev = prev_chunk(c);
-    if (prev && prev->inuse) {
+    if (prev && !prev->inuse) {
         prev->size += sizeof(chunk_t) + c->size;
         prev->next = c->next;
         GLOBAL_HEAP.avail += sizeof(chunk_t);
