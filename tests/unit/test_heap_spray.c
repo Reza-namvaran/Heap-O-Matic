@@ -3,6 +3,7 @@
 
 #include "allocator.h"
 #include "test_framework.h"
+#include "quarantine.h"
 
 int test_heap_spray_prevention_addresses_vary() {
     hinit();
@@ -38,9 +39,15 @@ int test_heap_spray_prevention_addresses_vary() {
     }
     TEST_ASSERT(unique_diffs >= 10);
 
-    for (int i = 0; i < num_allocs; i++) {
-        hfree(ptrs[i]);
-    }
+    #if ENABLE_QUARANTINE
+        for (int i = 0; i < num_allocs - get_quarantine_size(); i++) {
+            hfree(ptrs[i]);
+        }
+    #else
+        for (int i = 0; i < num_allocs; i++) {
+            hfree(ptrs[i]);
+        }
+    #endif
 
     return 0;
 }

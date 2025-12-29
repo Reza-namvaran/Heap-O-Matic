@@ -30,7 +30,11 @@ void quarantine_flush_one(void) {
 }
 
 void quarantine_flush_all(void) {
-    for (size_t i = 0; i < q_len; i++) {
+    while (q_len > 0) {
         quarantine_flush_one();
     }
+}
+
+int get_quarantine_size() {
+    return q_len;
 }

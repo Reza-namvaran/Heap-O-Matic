@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+
 #include "allocator.h"
+#include "quarantine.h"
 
 heap_t GLOBAL_HEAP;
 
@@ -58,5 +60,9 @@ void hinit() {
         // Fill free payload with poison pattern (0xDEADBEEF)
         void *payload = chunk_to_payload(aligned_start);
         memset(payload, 0xDB, aligned_start->size);
+    #endif
+
+    #if ENABLE_QUARANTINE
+        quarantine_init();
     #endif
 }

@@ -1,6 +1,7 @@
 #include "allocator.h"
 #include "debug.h"
 #include "split.h"
+#include "quarantine.h"
 
 #include <string.h>
 #include <errno.h>
@@ -30,7 +31,15 @@ void *halloc(size_t size) {
 
     chunk_t *curr = GLOBAL_HEAP.start;
 
+    if (!curr) {
+    #if ENABLE_QUARANTINE
+        quarantine_flush_one();
+        curr = GLOBAL_HEAP.start;
+    #endif
+    }
+
     while (curr) {
+
         if (!curr->inuse && curr->size >= payload) {
             curr = chunk_split(curr, payload);
 
@@ -55,6 +64,7 @@ void *halloc(size_t size) {
 
         curr = curr->next;
     }
+
 
     #ifdef ENABLE_DEBUG
         if (heap_check() != 0) {
