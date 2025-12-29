@@ -74,5 +74,15 @@ chunk_t *prev_chunk(chunk_t *c) {
     return (chunk_t *)((char *)c - sizeof(chunk_t) - c->prev_size);
 }
 
+static inline __attribute__((always_inline))
+uint32_t make_magic(chunk_t *c) {
+    return CHUNK_MAGIC ^ GLOBAL_HEAP.cookie ^ (uint32_t)(uintptr_t)c;
+}
+
+static inline __attribute__((always_inline))
+uint32_t *chunk_tail_magic(chunk_t *c) {
+    return (uint32_t *)((char *)chunk_to_payload(c) + c->size);
+}
+
 _Static_assert(sizeof(chunk_t) % HEAP_ALIGNMENT == 0, "chunk_t must be HEAP_ALIGNMENT aligned.");
 #endif
