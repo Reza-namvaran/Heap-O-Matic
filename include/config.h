@@ -11,6 +11,14 @@
 #define ENABLE_SPRAY_DETECT 1
 #define ENABLE_GC 1
 
+#define POOL_MAX 256
+
+static const size_t pool_sizes[] = {
+    16, 32, 64, 128, 256
+};
+
+#define POOL_COUNT 5
+
 #define SIZE_T_ONE ((size_t) 1)
 #define CHUNK_ALIGN_MASK (HEAP_ALIGNMENT - SIZE_T_ONE)
 
