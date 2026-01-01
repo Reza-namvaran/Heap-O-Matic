@@ -21,11 +21,11 @@ int heap_check(void) {
             free_sum += curr->size;
         }
 
-        if (curr->magic != (CHUNK_MAGIC ^ GLOBAL_HEAP.cookie) || curr->tail_magic != (CHUNK_MAGIC ^ GLOBAL_HEAP.cookie)) {
+        if (curr->magic != make_magic(curr)) {
             printf("\nHeap metadata corruption detected.\n");
             printf("%i\n", CHUNK_MAGIC);
             printf("%i\n", GLOBAL_HEAP.cookie);
-            printf("%i\n", CHUNK_MAGIC ^ GLOBAL_HEAP.cookie);
+            printf("%i\n", make_magic(curr));
             return -4;
         }
 

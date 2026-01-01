@@ -1,4 +1,5 @@
 #include "validate.h"
+#include <stdio.h>
 
 int validate_ptr(void *ptr, chunk_t **out) {
     if (!ptr) {
@@ -12,6 +13,7 @@ int validate_ptr(void *ptr, chunk_t **out) {
     if (!is_aligned(ptr)) {
         return invalid_ptr();
     }
+
 
     chunk_t *c = payload_to_chunk(ptr);
 
@@ -27,9 +29,13 @@ int validate_ptr(void *ptr, chunk_t **out) {
         return invalid_ptr();
     }
 
-    if (c->magic != (CHUNK_MAGIC ^ GLOBAL_HEAP.cookie) || c->tail_magic != (CHUNK_MAGIC ^ GLOBAL_HEAP.cookie)) {
+    if (c->magic != make_magic(c)) {
         return invalid_ptr();
     }
+
+    // printf("invalid\n");
+    // if (*chunk_tail_magic(c) != make_magic(c))
+    //     return invalid_ptr();
 
     *out = c;
     return 1;

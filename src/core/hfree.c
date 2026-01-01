@@ -14,13 +14,13 @@ void hfree(void *ptr) {
 
     chunk_t *c = NULL;
     if (!validate_ptr(ptr, &c)) {
+        // printf("here now\n");
         pthread_mutex_unlock(&GLOBAL_HEAP.lock);
         return;
     }
 
     c->inuse = 0;
     GLOBAL_HEAP.avail += c->size;
-
     #if ENABLE_POISONING
         memset(chunk_to_payload(c), 0xDD, c->size);
     #endif

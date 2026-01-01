@@ -37,12 +37,12 @@ void hinit() {
         dummy->next = aligned_start;
     }
 
-    srand(time(NULL));
-    GLOBAL_HEAP.cookie  = (uint32_t)rand();
+    uintptr_t mix = (uintptr_t)heap_base ^ (uintptr_t)&GLOBAL_HEAP;
+    mix ^= (uintptr_t)time(NULL);
+    GLOBAL_HEAP.cookie = (uint32_t)(mix ^ (mix >> 32));
 
     // Init first free chunk (rest of heap)
-    aligned_start->magic = CHUNK_MAGIC ^ GLOBAL_HEAP.cookie;
-    aligned_start->tail_magic = CHUNK_MAGIC ^ GLOBAL_HEAP.cookie;
+    aligned_start->magic = make_magic(aligned_start);
     aligned_start->prev_size = 0;
     aligned_start->size  = HEAP_DEFAULT_SIZE - pad - sizeof(chunk_t);
     aligned_start->inuse = 0;

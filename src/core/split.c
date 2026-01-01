@@ -12,14 +12,12 @@ chunk_t *chunk_split(chunk_t *chunk, size_t payload) {
     rem->size  = chunk->size - sizeof(chunk_t) - payload;
     rem->inuse = 0;
     rem->next  = chunk->next;
-    rem->magic = CHUNK_MAGIC ^ GLOBAL_HEAP.cookie;
-    rem->tail_magic = CHUNK_MAGIC ^ GLOBAL_HEAP.cookie;
+    rem->magic = make_magic(rem);
 
 
     chunk->size  = payload;
     chunk->next  = rem;
-    chunk->magic = CHUNK_MAGIC ^ GLOBAL_HEAP.cookie;
-    chunk->tail_magic = CHUNK_MAGIC ^ GLOBAL_HEAP.cookie;
+    chunk->magic = make_magic(chunk);
 
     if (rem->next) {
         rem->next->prev_size = rem->size;
