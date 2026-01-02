@@ -17,26 +17,8 @@ void hinit() {
         errno = ENOMEM;
         return;
     }
-
-    // Defensive Programming: Align to start
-    size_t pad = align_offset(heap_base);
-
-    /// TODO: Decide on final design
-    // for now we assume mmap is always aligned
-    if (pad != 0) {
-        printf("pad is not 0: %i", pad);
-        pad = 0;
-    }
     
-    chunk_t *aligned_start = (chunk_t *)((char *)heap_base + pad);
-
-    // If padded, make a dummy in-use chunk for the padding space
-    if (pad > 0) {
-        chunk_t *dummy = (chunk_t *) heap_base;
-        dummy->size = pad;
-        dummy->inuse = 1;
-        dummy->next = aligned_start;
-    }
+    chunk_t *aligned_start = (chunk_t *)((char *)heap_base);
 
     uintptr_t mix = (uintptr_t)heap_base ^ (uintptr_t)&GLOBAL_HEAP;
     mix ^= (uintptr_t)time(NULL);
@@ -45,12 +27,12 @@ void hinit() {
     // Init first free chunk (rest of heap)
     aligned_start->magic = make_magic(aligned_start);
     aligned_start->prev_size = 0;
-    aligned_start->size  = HEAP_DEFAULT_SIZE - pad - sizeof(chunk_t);
+    aligned_start->size  = HEAP_DEFAULT_SIZE - sizeof(chunk_t);
     aligned_start->inuse = 0;
     aligned_start->next  = NULL;
 
     // Set global heap
-    GLOBAL_HEAP.start   = (pad > 0) ? (chunk_t *)heap_base : aligned_start;
+    GLOBAL_HEAP.start   = aligned_start;
     GLOBAL_HEAP.heap_lo = heap_base;
     GLOBAL_HEAP.heap_hi = (char *)heap_base + HEAP_DEFAULT_SIZE;
     GLOBAL_HEAP.total   = HEAP_DEFAULT_SIZE;
