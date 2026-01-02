@@ -1,6 +1,5 @@
 #include <string.h>
 #include <errno.h>
-#include <stdio.h>
 
 #include "allocator.h"
 #include "validate.h"

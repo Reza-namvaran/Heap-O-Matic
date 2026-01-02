@@ -7,70 +7,15 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <string.h>
-#include <stdio.h>
 
 static int gc_enabled = 1;
 
-// Stack boundaries (Linux / POSIX safe)
+static void gc_mark_ptr(void *p);
 
-static inline void *stack_top(void) {
-    volatile int x;
-    return (void *)&x;
-}
-
-static inline void *stack_bottom(void) {
-    pthread_attr_t attr;
-    pthread_getattr_np(pthread_self(), &attr);
-
-    void *base;
-    size_t size;
-    pthread_attr_getstack(&attr, &base, &size);
-
-    pthread_attr_destroy(&attr);
-    return (char *)base + size;
-}
-
-//Mark phase
-static void gc_mark_ptr(void *p) {
-    if (p < GLOBAL_HEAP.heap_lo || p >= GLOBAL_HEAP.heap_hi)
-        return;
-
-    if (!is_aligned(p))
-        return;
-
-    chunk_t *c = payload_to_chunk(p);
-
-    /* ignore pool objects */
-    if (c->size == 0 || c->size > GLOBAL_HEAP.total)
-        return;
-
-    if ((void *)c < GLOBAL_HEAP.heap_lo || (void *)c >= GLOBAL_HEAP.heap_hi)
-        return;
-
-    if (!c->inuse)
-        return;
-
-    if (c->magic != make_magic(c))
-        return;
-
-    if (c->marked)
-        return;
-
-    c->marked = 1;
-
-
-    /* Conservative scan payload for interior pointers */
-    uintptr_t *data = (uintptr_t *)chunk_to_payload(c);
-    size_t words = c->size / sizeof(uintptr_t);
-
-    for (size_t i = 0; i < words; i++) {
-        gc_mark_ptr((void *)data[i]);
-    }
-}
-
-static inline uintptr_t *current_sp(void) {
+// Roots: Stack and ELF
+static inline uintptr_t current_sp(void) {
     volatile uintptr_t x;
-    return (uintptr_t *)&x;
+    return (uintptr_t)&x;
 }
 
 static inline void get_stack_bounds(uintptr_t **low, uintptr_t **high) {
@@ -87,25 +32,87 @@ static inline void get_stack_bounds(uintptr_t **low, uintptr_t **high) {
     *high = (uintptr_t *)((char *)base + size);
 }
 
+/* Provided by linker on Linux */
+extern char __data_start[];
+extern char _edata[];
+extern char __bss_start[];
+extern char _end[];
 
-static void gc_mark_stack(void) {
-    uintptr_t *sp = current_sp();
-    uintptr_t *stack_low, *stack_high;
+static void gc_mark_globals(void) {
+    uintptr_t *p = (uintptr_t *)__data_start;
+    uintptr_t *end = (uintptr_t *)_end;
 
-    get_stack_bounds(&stack_low, &stack_high);
-
-    /* stack grows downward on Linux */
-    uintptr_t *p = sp;
-
-    if (p < stack_low)
-        p = stack_low;
-
-    for (; p < stack_high; p++) {
+    for (; p < end; p++) {
         gc_mark_ptr((void *)*p);
     }
 }
 
-// Sweep phase
+static inline int test_and_set_mark(uint8_t *mark) {
+    uint8_t old;
+#if defined(__x86_64__)
+    __asm__ volatile (
+        "lock xchg %0, %1"
+        : "=r"(old), "+m"(*mark)
+        : "0"(1)
+        : "memory"
+    );
+#else
+    old = *mark;
+    *mark = 1;
+#endif
+    return old;
+}
+
+// Mark Phase
+static void gc_mark_ptr(void *p) {
+    if (!p) return;
+
+    if (p < GLOBAL_HEAP.heap_lo || p >= GLOBAL_HEAP.heap_hi)
+        return;
+
+    if (!is_aligned(p))
+        return;
+
+    chunk_t *c = payload_to_chunk(p);
+
+    if ((void *)c < GLOBAL_HEAP.heap_lo || (void *)c >= GLOBAL_HEAP.heap_hi)
+        return;
+
+    /* ignore pool slabs / invalid chunks */
+    if (!c->inuse || c->size == 0 || c->size > GLOBAL_HEAP.total)
+        return;
+
+    if (c->magic != make_magic(c))
+        return;
+
+    /* fast mark */
+    if (test_and_set_mark(&c->marked))
+        return;
+
+    /* conservative scan payload */
+    uintptr_t *data = (uintptr_t *)chunk_to_payload(c);
+    size_t words = c->size / sizeof(uintptr_t);
+
+    for (size_t i = 0; i < words; i++) {
+        gc_mark_ptr((void *)data[i]);
+    }
+}
+
+static void gc_mark_stack(void) {
+    uintptr_t sp = current_sp();
+    uintptr_t *sp_ptr = (uintptr_t *) sp; 
+    uintptr_t *low, *high;
+
+    get_stack_bounds(&low, &high);
+
+    if (sp_ptr < low) sp_ptr = low;
+
+    for (; sp_ptr < high; sp_ptr++) {
+        gc_mark_ptr((void *)*sp_ptr);
+    }
+}
+
+// Sweep Phase
 static void gc_sweep(void) {
     chunk_t *c = GLOBAL_HEAP.start;
 
@@ -114,16 +121,17 @@ static void gc_sweep(void) {
             if (!c->marked) {
                 /* unreachable */
                 c->inuse = 0;
+                GLOBAL_HEAP.avail += c->size;
 
-                #if ENABLE_POISONING
-                    memset(chunk_to_payload(c), 0xDD, c->size);
-                #endif
+#if ENABLE_POISONING
+                memset(chunk_to_payload(c), 0xDD, c->size);
+#endif
 
-                #if ENABLE_QUARANTINE
-                    quarantine_push(c);
-                #else
-                    coalesce(c);
-                #endif
+#if ENABLE_QUARANTINE
+                quarantine_push(c);
+#else
+                coalesce(c);
+#endif
             } else {
                 /* reachable */
                 c->marked = 0;
@@ -136,6 +144,7 @@ static void gc_sweep(void) {
 // Public API
 void gc_collect_locked(void) {
     gc_mark_stack();
+    gc_mark_globals();
     gc_sweep();
 }
 

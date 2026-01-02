@@ -7,7 +7,6 @@
 
 #include <string.h>
 #include <errno.h>
-#include <stdio.h> 
 
 void *halloc_raw(size_t size) {
     if (size == 0) return NULL;
@@ -36,6 +35,7 @@ void *halloc_raw(size_t size) {
 
             GLOBAL_HEAP.avail -= curr->size;
             curr->inuse = 1;
+            curr->marked = 0;
 
             #if ENABLE_POISONING
                     memset(chunk_to_payload(curr), 0xAA, curr->size);
