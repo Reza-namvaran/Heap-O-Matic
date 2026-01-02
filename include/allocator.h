@@ -27,6 +27,16 @@ typedef struct chunk_t {
     uint8_t _pad2[8];
 } chunk_t;
 
+typedef struct pool_chunk {
+    struct pool_chunk *next;
+} pool_chunk_t;
+
+typedef struct pool {
+    size_t size;
+    pool_chunk_t *free;
+    size_t total;
+} pool_t;
+
 typedef struct heap_t {
     uint32_t cookie;
     struct chunk_t *start;  
@@ -34,10 +44,12 @@ typedef struct heap_t {
     void *heap_hi;
     size_t total;
     uint32_t avail;
+    pool_t pools[POOL_COUNT];
     pthread_mutex_t lock;    
 } heap_t;
 
 void hinit();
+void *halloc_raw(size_t size);
 void *halloc(size_t size);
 void hfree(void *ptr);
 

@@ -8,12 +8,12 @@
 #define ENABLE_POISONING 0
 #define ENABLE_DEBUG 1
 #define ENABLE_QUARANTINE 1
-#define ENABLE_SPRAY_DETECT 1
+#define ENABLE_SPRAY_DETECT 0
 #define ENABLE_GC 1
 
 #define POOL_MAX 256
 
-static const size_t pool_sizes[] = {
+static const int pool_sizes[] = {
     16, 32, 64, 128, 256
 };
 

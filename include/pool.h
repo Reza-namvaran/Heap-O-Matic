@@ -1,16 +1,16 @@
-#pragma once
+#ifndef POOL_H
+#define POOL_H
 #include "allocator.h"
 
-typedef struct pool_chunk {
-    struct pool_chunk *next;
-} pool_chunk_t;
+#define POOL_SLAB_SIZE 4096
 
-typedef struct pool {
-    size_t size;
-    pool_chunk_t *free;
-    size_t total;
-} pool_t;
+typedef struct pool_hdr {
+    uint8_t pool_index;
+} pool_hdr_t;
 
 void pool_hinit(void);
 void *pool_halloc(size_t size);
-void pool_hfree(chunk_t *c);
+void pool_hfree(void *c);
+
+int pool_index(size_t size);
+#endif
