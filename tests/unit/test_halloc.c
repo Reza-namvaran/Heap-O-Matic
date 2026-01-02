@@ -12,6 +12,16 @@ int test_halloc_returns_nonnull() {
 
 int test_halloc_multiple_allocations() {
     hinit();
+    void *p1 = halloc(512);
+    void *p2 = halloc(1024);
+    TEST_ASSERT(p1 != NULL);
+    TEST_ASSERT(p2 != NULL);
+    TEST_ASSERT(p1 != p2); // distinct pointers
+    return 0;
+}
+
+int test_halloc_multiple_pool_allocations() {
+    hinit();
     void *p1 = halloc(64);
     void *p2 = halloc(32);
     TEST_ASSERT(p1 != NULL);
@@ -56,6 +66,7 @@ int test_halloc_poison_payload() {
 int main() {
     TEST_RUN(test_halloc_returns_nonnull);
     TEST_RUN(test_halloc_multiple_allocations);
+    TEST_RUN(test_halloc_multiple_pool_allocations);
     TEST_RUN(test_halloc_avail_decreases);
     TEST_RUN(test_halloc_splits_chunk);
     #if ENABLE_POISONING
