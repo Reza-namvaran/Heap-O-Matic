@@ -1,14 +1,93 @@
 #ifndef ALLOCATOR_H
 #define ALLOCATOR_H
+
+#include <stddef.h>
+#include <stdint.h>
+#include <pthread.h>
 #include <stdlib.h>
 
-typedef struct block {
+#include "config.h"
+
+typedef struct chunk_t {
+    uint32_t magic;
+    uint32_t size;
+    uint32_t prev_size;
+    uint8_t inuse;
+    uint8_t marked;
+    uint8_t _pad[6];
+    struct chunk_t *next;
+    uint32_t tail_magic;
+    uint8_t _pad2[8];
+} chunk_t;
+
+typedef struct pool_chunk {
+    struct pool_chunk *next;
+} pool_chunk_t;
+
+typedef struct pool {
     size_t size;
-    int free;
-    struct block *next;
-} block_t;
+    pool_chunk_t *free;
+    size_t total;
+} pool_t;
 
-void* mem_alloc(size_t size);
-void mem_free(void *ptr);
+typedef struct heap_t {
+    uint32_t cookie;
+    struct chunk_t *start;  
+    void *heap_lo;
+    void *heap_hi;
+    size_t total;
+    uint32_t avail;
+    pool_t pools[POOL_COUNT];
+    pthread_mutex_t lock;    
+} heap_t;
 
+void hinit();
+void *halloc_raw(size_t size);
+void *halloc(size_t size);
+void hfree(void *ptr);
+
+// Helpers exposed for tests and debug
+extern heap_t GLOBAL_HEAP;
+
+static inline __attribute__((always_inline))
+size_t align_up(size_t size, size_t align) {
+    return (size + align - 1) & ~(align - 1);
+}
+
+static inline __attribute__((always_inline)) 
+void *chunk_to_payload(chunk_t *c) {
+    return (void *)(c + 1);
+}
+
+static inline __attribute__((always_inline))
+chunk_t *payload_to_chunk(void *p) {
+    return ((chunk_t *)p) - 1;
+}
+
+static inline __attribute__((always_inline))
+chunk_t *next_chunk(chunk_t *c) {
+    chunk_t *next = (chunk_t *)((char *)c + sizeof(chunk_t) + c->size);
+    return ((void *) next < GLOBAL_HEAP.heap_hi) ? next : NULL;
+}
+
+static inline __attribute__((always_inline))
+chunk_t *prev_chunk(chunk_t *c) {
+    if (c->prev_size == 0) {
+        return NULL;
+    }
+
+    return (chunk_t *)((char *)c - sizeof(chunk_t) - c->prev_size);
+}
+
+static inline __attribute__((always_inline))
+uint32_t make_magic(chunk_t *c) {
+    return CHUNK_MAGIC ^ GLOBAL_HEAP.cookie ^ (uint32_t)(uintptr_t)c;
+}
+
+static inline __attribute__((always_inline))
+uint32_t *chunk_tail_magic(chunk_t *c) {
+    return (uint32_t *)((char *)chunk_to_payload(c) + c->size);
+}
+
+_Static_assert(sizeof(chunk_t) % HEAP_ALIGNMENT == 0, "chunk_t must be HEAP_ALIGNMENT aligned.");
 #endif
