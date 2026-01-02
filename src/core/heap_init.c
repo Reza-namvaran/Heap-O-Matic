@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include "allocator.h"
+#include "pool.h"
 #include "quarantine.h"
 
 heap_t GLOBAL_HEAP;
@@ -54,7 +55,9 @@ void hinit() {
     GLOBAL_HEAP.heap_hi = (char *)heap_base + HEAP_DEFAULT_SIZE;
     GLOBAL_HEAP.total   = HEAP_DEFAULT_SIZE;
     GLOBAL_HEAP.avail   = aligned_start->size;
+
     pthread_mutex_init(&GLOBAL_HEAP.lock, NULL); // Thread Safe
+    pool_hinit();
 
     #if ENABLE_POISONING
         // Fill free payload with poison pattern (0xDEADBEEF)
