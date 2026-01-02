@@ -11,7 +11,7 @@ int test_hfree_null_does_nothing() {
 
 int test_hfree_sets_inuse_zero() {
     hinit();
-    void *p = halloc(64);
+    void *p = halloc(512);
     chunk_t *c = payload_to_chunk(p);
     TEST_ASSERT(c->inuse == 1);
 
@@ -20,9 +20,19 @@ int test_hfree_sets_inuse_zero() {
     return 0;
 }
 
+int test_pool_alloc_free() {
+    hinit();
+    void *p = halloc(64);
+    TEST_ASSERT(p != NULL);
+
+    hfree(p);
+    return 0;
+}
+
+
 int test_hfree_increases_avail() {
     hinit();
-    void *p = halloc(128);
+    void *p = halloc(512);
     size_t avail_before = GLOBAL_HEAP.avail;
 
     hfree(p);
@@ -56,6 +66,7 @@ int test_hfree_invalid_ptr_ignored() {
 int main() {
     TEST_RUN(test_hfree_null_does_nothing);
     TEST_RUN(test_hfree_sets_inuse_zero);
+    TEST_RUN(test_pool_alloc_free);
     TEST_RUN(test_hfree_increases_avail);
     #if ENABLE_POISONING
     TEST_RUN(test_hfree_poisons_payload);

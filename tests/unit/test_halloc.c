@@ -32,10 +32,10 @@ int test_halloc_splits_chunk() {
     hinit();
     chunk_t *first = GLOBAL_HEAP.start;
     size_t org_size = first->size;
-    void *ptr = halloc(32);
-    TEST_ASSERT(first->size == 32);
+    void *ptr = halloc(512);
+    TEST_ASSERT(first->size == 512);
     TEST_ASSERT(first->next != NULL);
-    TEST_ASSERT(first->next->size == org_size - 32 - sizeof(chunk_t));
+    TEST_ASSERT(first->next->size == org_size - 512 - sizeof(chunk_t));
     TEST_ASSERT(first->next->inuse == 0);
     return 0;
 }

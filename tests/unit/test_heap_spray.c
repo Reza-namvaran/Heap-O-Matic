@@ -9,7 +9,7 @@ int test_heap_spray_prevention_addresses_vary() {
     hinit();
 
     const int num_allocs = 50;
-    const size_t size = 128;
+    const size_t size = 512;
     void *ptrs[num_allocs];
     intptr_t addresses[num_allocs];
 
