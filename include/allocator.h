@@ -21,7 +21,8 @@ typedef struct chunk_t {
     uint32_t prev_size;
     // chunk_kind_t kind;
     uint8_t inuse;
-    uint8_t _pad[7];
+    uint8_t marked;
+    uint8_t _pad[6];
     struct chunk_t *next;
     uint32_t tail_magic;
     uint8_t _pad2[8];

@@ -3,6 +3,7 @@
 #include "split.h"
 #include "quarantine.h"
 #include "pool.h"
+#include "hgc.h"
 
 #include <string.h>
 #include <errno.h>
@@ -68,6 +69,10 @@ void *halloc(size_t size) {
 
     /* ---------- HEAP PATH ---------- */
     void *res = halloc_raw(size);
+    if (!res && ENABLE_GC) {
+        gc_collect_locked();
+        res = halloc_raw(size);
+    }
 
     #if ENABLE_DEBUG
         if (heap_check() != 0) {
